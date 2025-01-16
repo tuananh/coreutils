@@ -238,7 +238,7 @@ impl SplitWriter<'_> {
         self.dev_null = true;
     }
 
-    /// Writes the line to the current split, appending a newline character.
+    /// Writes the line to the current split, appending a newline character if not present.
     /// If [`self.dev_null`] is true, then the line is discarded.
     ///
     /// # Errors
@@ -250,8 +250,11 @@ impl SplitWriter<'_> {
                 Some(ref mut current_writer) => {
                     let bytes = line.as_bytes();
                     current_writer.write_all(bytes)?;
-                    current_writer.write_all(b"\n")?;
-                    self.size += bytes.len() + 1;
+                    if !line.ends_with('\n') {
+                        current_writer.write_all(b"\n")?;
+                        self.size += 1;
+                    }
+                    self.size += bytes.len();
                 }
                 None => panic!("trying to write to a split that was not created"),
             }
